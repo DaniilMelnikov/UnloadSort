@@ -234,7 +234,7 @@ class UnloadSort():
         """
         Создаём итоговый файл с названием result.csv и записываем данные
         """
-        with open('result.csv', 'w', newline='') as csvfile:
+        with open('result.csv', 'w', encoding="cp1251", newline='') as csvfile:
             fieldnames = ['id', 
                           'домен', 
                           'запросы', 
@@ -254,9 +254,9 @@ class UnloadSort():
         """
         dict_limit = {}
 
-        with open(f'limit.csv', 'r', newline='') as csvfile:
+        with open(f'limit.csv', 'r', encoding="cp1251", newline='') as csvfile:
             reader = csv.DictReader(csvfile, delimiter=';')
-
+            
             for row in reader:
                 dict_limit[row['Домен']] = int(row['Лимиты'])
 
@@ -302,12 +302,13 @@ class UnloadSort():
 
 
 def main():
-    path = os.getcwd() + "\\file_excel\\"
+    path = os.getcwd() + "/file_excel/"
     user = "dnl.melnikov"
-    key = "MTY3ODkzMDY3NTQ5NjIyMjIwNTgxOTczMTE2"
-
+    key = "MTY3OTE0NDIyODcyODY5NDcxNDIxOTczMTM5"
+    
     for files in os.walk(path):
         files = files[2]
+
     files.sort()
 
     demo = UnloadSort(path, files, user, key)

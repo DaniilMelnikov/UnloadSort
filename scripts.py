@@ -20,6 +20,8 @@ class UnloadSort():
                 'spb': '2'
                 }
         
+        self.ready_limit = []
+        
         self.region = ''
         self.domain = ''
         self.csv_list = {}
@@ -87,8 +89,16 @@ class UnloadSort():
                     self.progress_bar(f'{key}: {row["Запрос"]}')
                     xml = self.request_xmlproxy(row)
                     self.parser_xml(xml, row)
+            
+            self.ready_limit.append(
+                {"домен": key,
+                 "лимиты набранные": self.counter_limit,
+                 "лимиты всего": self.limit_int[counter]
+                }
+            )
                 
         self.create_csv()
+        self.create_csv_limit()
 
 
     def setup_region(self, file):
@@ -133,7 +143,7 @@ class UnloadSort():
 
             reader = csv.DictReader(csvfile, delimiter=';')
             for row in reader:
-                if int(row['Позиция']) < 30:
+                if int(row['Позиция']) <= 30:
                     try:
                         request = row['\ufeffЗапрос']
                     except KeyError:
@@ -152,7 +162,7 @@ class UnloadSort():
                             'Регион': self.region,
                         }
                     )
-
+            shuffle(self.csv_list[self.cache_file])
             self.csv_list[self.cache_file].append(
                 self.search_my_domains()
             )
@@ -246,7 +256,20 @@ class UnloadSort():
             writer.writeheader()
             for row in self.sort_list:
                 writer.writerow(row)
-
+    
+    def create_csv_limit(self):
+        """
+        Создаём итоговый файл с тем, дошли ли все лимиты.
+        """
+        with open('limit_res.csv', 'w', encoding="cp1251", newline='') as csvfile:
+            fieldnames = ['домен', 
+                          'лимиты набранные', 
+                          'лимиты всего'
+                          ]
+            writer = csv.DictWriter(csvfile, fieldnames=fieldnames, delimiter=';')
+            writer.writeheader()
+            for row in self.ready_limit:
+                writer.writerow(row)
     
     def __limit(self):
         """
@@ -284,11 +307,18 @@ class UnloadSort():
                 diff_int = target_int - round_int
                 range_int = round(diff_int * counter)
 
+
                 for int in range(counter):
                     list_limit.append(round_int)
 
+                if range_int < 0:
+                    range_int = range_int*(-1)
+                    enum_element = -1
+                else:
+                    enum_element = 1
+
                 for id in range(range_int):
-                    list_limit[id] += 1
+                    list_limit[id] += enum_element
 
                 shuffle(list_limit)
                 self.limit_domain[self.domain_cache] = list_limit

@@ -4,7 +4,7 @@ import re
 import requests
 from random import shuffle
 from bs4 import BeautifulSoup
-
+from dotenv import load_dotenv
 
 class UnloadSort():
 
@@ -43,7 +43,7 @@ class UnloadSort():
         Отображает прогресс файлы, которые обрабатываются
         """
         progress = f'{element}'
-        print(progress, end='\r')
+        print(f"{progress}", end='\r')
 
 
     def start_app(self):
@@ -57,7 +57,7 @@ class UnloadSort():
 
             self.write_csv_list()
             self.progress_bar(file)
-
+        print(self.csv_list)
         self.__sort_limit()
 
         counter = 0
@@ -76,6 +76,7 @@ class UnloadSort():
 
             for row in list:
                 if type(row) == type({}):
+                    self.progress_bar(f'{key}: {self.counter_limit}/{self.limit_int[counter]}')
                     # Проверяет: Счётчик равен лимиту? Если да, то выбирает другой файл
                     if self.counter_limit == self.limit_int[counter]:
                         break
@@ -86,7 +87,6 @@ class UnloadSort():
                         self.counter_limit_cache = self.counter_limit
                         continue
 
-                    self.progress_bar(f'{key}: {row["Запрос"]}')
                     xml = self.request_xmlproxy(row)
                     self.parser_xml(xml, row)
             
@@ -172,7 +172,7 @@ class UnloadSort():
         """
         Вытягиевает домен из названия файла
         """
-        pattern = r'(www\.)*([A-Za-z0-9-]{1,63})(\.[A-Za-z0-9-]{1,10})'
+        pattern = r'(www\.)*([A-Za-z0-9-]{1,63}\.)*([А-Яа-яA-Za-z0-9-]{1,63})(\.[А-Яа-яA-Za-z0-9-]{1,10})'
 
         match = re.search(pattern, self.cache_file)
         return match.group()
@@ -183,7 +183,7 @@ class UnloadSort():
         POST запрос на сервер xmlproxy.ru. Отправляем xml.
         Передаются имя юзера, токен ключ, которые введёте.
         """
-        url = f'http://xmlproxy.ru/search/xml?user={self.user}%40yandex.ru&key={self.key}' + self.region
+        url = f'http://xmlproxy.ru/search/xml?user={self.user}&key={self.key}' + self.region
 
         headers = {'Content-Type': 'application/xml; charset=utf-8'}
 
@@ -332,9 +332,11 @@ class UnloadSort():
 
 
 def main():
+    load_dotenv()
     path = os.getcwd() + "/file_excel/"
-    user = "dnl.melnikov"
-    key = "MTY3OTE0NDIyODcyODY5NDcxNDIxOTczMTM5"
+    user = os.getenv("USER_NAME")
+    key = os.getenv("KEY_API")
+    
     
     for files in os.walk(path):
         files = files[2]
